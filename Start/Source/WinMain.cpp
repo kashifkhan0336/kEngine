@@ -1,10 +1,12 @@
 #include "pch.h"
-
+#pragma region GlobalVariables
 	WCHAR WindowClass[MAX_NAME_STRING];
 	WCHAR WindowTitle[MAX_NAME_STRING];
 	INT WindowsHeight;
 	INT WindowsWidth;
 	HICON hIcon;
+#pragma endregion
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	switch (message) {
@@ -14,13 +16,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lpara
 	}
 	return DefWindowProc(hwnd, message, wparam, lparam);
 }
+
+
+
+#pragma region Pre-Declaration
+VOID InitializeVariables();
+VOID CreateWindowsClass();
+#pragma endregion
+
 int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, INT)
 {
-	wcscpy_s(WindowClass, TEXT("kEngine"));
-	wcscpy_s(WindowTitle, TEXT("kEngine Start"));
-	WindowsWidth = 1366;
-	WindowsHeight = 768;
-	hIcon = LoadIcon(HInstance(), MAKEINTRESOURCE(IDI_MAINICON));
+	InitializeVariables();
+	CreateWindowsClass();
+
+	HWND hwnd = CreateWindow(WindowClass, WindowTitle, WS_OVERLAPPEDWINDOW,
+		CW_USEDEFAULT, 0, WindowsWidth, WindowsHeight, nullptr, nullptr, HInstance(), nullptr);
+	if (!hwnd) {
+		MessageBox(0, L"Failed to create window!", 0, 0);
+		return 0;
+	}
+	ShowWindow(hwnd, SW_SHOW);
+
+	MSG msg = { 0 };
+	while (msg.message != WM_QUIT) {
+		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+	}
+	return 0;
+}
+
+VOID CreateWindowsClass()
+{
 	WNDCLASSEX wcex;
 
 	wcex.cbSize = sizeof(WNDCLASSEX);
@@ -39,21 +67,13 @@ int CALLBACK WinMain(HINSTANCE, HINSTANCE, LPSTR, INT)
 	wcex.hInstance = HInstance();
 	wcex.lpfnWndProc = WindowProc;
 	RegisterClassEx(&wcex);
+}
 
-	HWND hwnd = CreateWindow(WindowClass, WindowTitle, WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, WindowsWidth, WindowsHeight, nullptr, nullptr, HInstance(), nullptr);
-	if (!hwnd) {
-		MessageBox(0, L"Failed to create window!", 0, 0);
-		return 0;
-	}
-	ShowWindow(hwnd, SW_SHOW);
+VOID InitializeVariables() {
+	LoadString(HInstance(), IDS_PERGAMENAME, WindowTitle, MAX_NAME_STRING);
+	LoadString(HInstance(), IDS_WINDOWCLASS, WindowClass, MAX_NAME_STRING);
 
-	MSG msg = { 0 };
-	while (msg.message != WM_QUIT) {
-		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
-	}
-	return 0;
+	WindowsWidth = 1366;
+	WindowsHeight = 768;
+	hIcon = LoadIcon(HInstance(), MAKEINTRESOURCE(IDI_MAINICON));
 }
